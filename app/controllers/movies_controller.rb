@@ -10,11 +10,40 @@ class MoviesController < ApplicationController
     # will render app/views/movies/show.<extension> by default
   end
 
-  def index
-    @sort = params[:sort] 
-    @movies = Movie.all.order(@sort)
+    def index
+    @movies = Movie.all
+    @revert = 0
+    if params[:sort]=="title"
+      @movies=@movies.sort_by.each{|m| m.title}
+    elsif params[:sort]=="release_date"
+      @movies=@movies.sort_by.each{|m| m.release_date}
+    end
+
+    @all_ratings=['G','PG','PG-13','R']
+
+    if(@ticked!= nil)
+      @movies= @movies.find_all{ |m| @ticked.hs_key?(m.rating) and @ticked[m.rating]==true} 
+    end
+    if (params[:ratings]!=nil)
+      @movies= @movies.find_all{|m| params[:ratings].has_key?(m.rating)}
+    end
+
+    if(@revert==1)
+      redirect_to movies_path(:sort=>params[:sort], :ratings=>params[:ratings])
+    end
+
+
+    @ticked={}
+    @all_ratings.each{|rating|
+      if params[:ratings]==nil
+        @ticked[rating]=false
+      else
+        @ticked[rating]=params[:ratings].has_key?(rating)
+      end
+    }
 
   end
+
 
   def new
     # default: render 'new' template
