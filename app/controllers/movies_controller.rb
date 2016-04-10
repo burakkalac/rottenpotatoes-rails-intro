@@ -10,13 +10,18 @@ class MoviesController < ApplicationController
     # will render app/views/movies/show.<extension> by default
   end
 
-    def index
+  def index
     @movies = Movie.all
     @revert = 0
     if params[:sort]=="title"
+      session[:sort]=params[:sort]
       @movies=@movies.sort_by.each{|m| m.title}
     elsif params[:sort]=="release_date"
+      session[:sort]=params[:sort]
       @movies=@movies.sort_by.each{|m| m.release_date}
+    elsif session.has_key?(:sort)
+      params[:sort]=session[:sort]
+      @revert=1
     end
 
     @all_ratings=['G','PG','PG-13','R']
@@ -25,7 +30,11 @@ class MoviesController < ApplicationController
       @movies= @movies.find_all{ |m| @ticked.hs_key?(m.rating) and @ticked[m.rating]==true} 
     end
     if (params[:ratings]!=nil)
+      session[:ratings]=params[:ratings]
       @movies= @movies.find_all{|m| params[:ratings].has_key?(m.rating)}
+    elsif(session.has_key?(:ratings))
+      params[:ratings]=session[:ratings]
+      @revert=1
     end
 
     if(@revert==1)
